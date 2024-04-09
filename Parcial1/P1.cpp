@@ -50,33 +50,17 @@ void original_matriz(int **matriz, int n)
 }
 }
 
-void print_matriz(int **matriz, int n)
-{
-    for(int fil=0; fil<n;fil++){
-        for(int col=0;col<n;col++) cout<< matriz[fil][col]<<'\t';
-        cout << endl <<endl;
-    }
-}
 void rotarMatriz90(int **matriz, int tam, int n) {
     for (int r = 0; r < n; ++r) {
-        int **temp = new int *[tam];
-        for (int i = 0; i < tam; ++i) {
-            temp[i] = new int[tam];
-        }
-        for (int i = 0; i < tam; ++i) {
-            for (int j = 0; j < tam; ++j) {
-                temp[j][tam - i - 1] = matriz[i][j];
+        for (int i = 0; i < tam / 2; ++i) {
+            for (int j = i; j < tam - i - 1; ++j) {
+                int temp = matriz[i][j];
+                matriz[i][j] = matriz[tam - j - 1][i];
+                matriz[tam - j - 1][i] = matriz[tam - i - 1][tam - j - 1];
+                matriz[tam - i - 1][tam - j - 1] = matriz[j][tam - i - 1];
+                matriz[j][tam - i - 1] = temp;
             }
         }
-        for (int i = 0; i < tam; ++i) {
-            for (int j = 0; j < tam; ++j) {
-                matriz[i][j] = temp[i][j];
-            }
-        }
-        for (int i = 0; i < tam; ++i) {
-            delete[] temp[i];
-        }
-        delete[] temp;
     }
 }
 
@@ -95,10 +79,11 @@ int *convertirArregloNumerico(char *arreglo)
                 ++arreglo;
             }
             if (indice >= 2 && ((*arreglo - '0') != 1 && (*arreglo - '0') != -1)) {
-                cout << "Error: A partir de la posición 2, los números solo pueden ser 1 o -1." << endl;
+                cout << "Error: A partir de la posición 2, los números solo pueden ser 1 o -1. " << endl;
                 delete[] arregloNumerico;
-                return nullptr;
+                return 0;
             }
+
             arregloNumerico[indice++] = (*arreglo - '0') * signo;
             if (indice == capacidad) {
                 if (capacidad >= INT_MAX / 2) {
@@ -118,15 +103,16 @@ int *convertirArregloNumerico(char *arreglo)
         } else {
             cout << "Error: La cadena contiene un caracter no permitido." << endl;
             delete[] arregloNumerico;
-            return nullptr;
+            return 0;
         }
         ++arreglo;
     }
     arregloNumerico[indice] = '\0';
-    int* resultado = new int[longitud];
+    int* resultado = new int[longitud+1];
     for (int i = 0; i < longitud; ++i) {
         resultado[i] = arregloNumerico[i];
     }
+    resultado[longitud]='\0';
     delete[] arregloNumerico;
 
     return resultado;
@@ -155,14 +141,14 @@ int tamanoArreglo(int *arreglo)
 {
     int tamano = 0;
     while (arreglo[tamano] != '\0') {
-        ++tamano;
+        tamano++;
     }
     return tamano;
 }
 
 void dim_rot(int *array, int longitud, int *&tam_mat, int *&tam_rot)
 {
-    int n=0;
+    int n = 0;
     int dim = 0;
     int rot = 0;
     int tam_min;
@@ -177,39 +163,36 @@ void dim_rot(int *array, int longitud, int *&tam_mat, int *&tam_rot)
         tam_min += 1;
     }
     for (int m = 2; m < longitud; ++m) {
-        int tam_min_aux=tam_min;
-        int **matriz1 = new int *[tam_min_aux];
+        int **matriz1 = new int *[tam_min];
         int **matriz2 = new int *[tam_min];
         for (int i = 0; i < tam_min; ++i) {
             matriz1[i] = new int[tam_min];
             matriz2[i] = new int[tam_min];
         }
         if (array[m] == 1) {
-            tam_mat[dim] = tam_min+2;
-            dim++;
-            tam_min_aux+=2;
+            tam_mat[dim] = tam_min + 2;
+            tam_mat[dim + 1] = tam_min;
             tam_rot[rot] = 0;
-            rot++;
+            tam_rot[rot+1]=0;
+            rot ++;
+            dim++;
         } else if (array[m] == -1) {
-            bool mat = comparar(matriz1, matriz2, tam_min, tam_min, f, c);
             int cant_rot = 0;
-            while (mat) {
-                rotarMatriz90(matriz2, tam_min,n);
-                mat = comparar(matriz1, matriz2, tam_min, tam_min, f, c);
+            int n = 0;
+            bool iguales = false;
+
+            while (cant_rot < 4 && !iguales) {
+                rotarMatriz90(matriz2, tam_min, n);
                 cant_rot++;
-                if (cant_rot < 4 && mat) {
-                    tam_min += 2;
-                    for (int i = 0; i < tam_min; ++i) {
-                        delete[] matriz2[i];
-                        matriz2[i] = new int[tam_min];
-                    }
-                    original_matriz(matriz2, tam_min);
-                }
+                iguales = !comparar(matriz1, matriz2, tam_min, tam_min, f, c);
             }
             tam_mat[dim] = tam_min;
+            tam_mat[dim + 1] = tam_min;
+            tam_rot[rot] = n;
+            tam_rot[rot+1]=cant_rot;
+            n=cant_rot;
+            rot ++;
             dim++;
-            tam_rot[rot] = cant_rot;
-            rot++;
         }
         for (int i = 0; i < tam_min; ++i) {
             delete[] matriz1[i];
@@ -218,8 +201,6 @@ void dim_rot(int *array, int longitud, int *&tam_mat, int *&tam_rot)
         delete[] matriz1;
         delete[] matriz2;
     }
-
-
 }
 
 
